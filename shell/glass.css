@@ -1,0 +1,163 @@
+/* TSF Browser — camada de vidro translúcido.
+   Superfícies em camadas: tinta escura + brilho especular no topo + borda gradiente + granulação sutil,
+   luz que acompanha o cursor (--mx/--my) e, no Windows 11 22H2+, o Acrylic do sistema por trás de tudo. */
+
+:root {
+  --glass-tint: rgba(18, 22, 38, .46);
+  --glass-tint-strong: rgba(14, 17, 30, .72);
+  --glass-edge: rgba(255, 255, 255, .11);
+  --glass-edge-hi: rgba(255, 255, 255, .22);
+  --glass-blur: 30px;
+  --spec: linear-gradient(180deg, rgba(255, 255, 255, .09), rgba(255, 255, 255, .015) 32%, transparent 60%);
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* ---------- vidro do sistema (Acrylic) ---------- */
+body.os-glass { background: transparent; }
+body.os-glass::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none;
+  background: linear-gradient(160deg, rgba(var(--glow), .10), transparent 45%), color-mix(in srgb, var(--bg) 58%, transparent);
+}
+body.os-glass .ambient i { opacity: .38; }
+
+/* ---------- superfícies principais ---------- */
+.card, .pill { position: relative; }
+.card, .pill, .suggest, .menu, .cmd, .dialog, .inspector, .uni-bar, .lab-bar {
+  background: var(--spec), var(--glass-tint);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%) brightness(1.06);
+  border: 1px solid var(--glass-edge);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .14),
+    inset 0 0 0 1px rgba(255, 255, 255, .02),
+    inset 0 -20px 40px -30px rgba(var(--glow), .25),
+    0 24px 60px -20px rgba(0, 0, 0, .55);
+}
+.suggest, .menu, .cmd, .dialog { background: var(--spec), var(--glass-tint-strong); --glass-blur: 36px; }
+.uni-bar, .lab-bar { border-width: 0 0 1px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08); }
+
+/* granulação: dá corpo ao vidro e evita "banding" nos gradientes */
+.card::after, .cmd::after, .dialog::after, .menu::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background-image: var(--grain); background-size: 160px; opacity: .035; mix-blend-mode: overlay;
+}
+
+/* luz que segue o cursor */
+.card::before, .tile::before, .tool-card::before, .tm-card::before, .lh-card::before, .atmo-card::before, .set-card::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; opacity: 0;
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 0%), rgba(255, 255, 255, .07), transparent 45%);
+  transition: opacity .3s;
+}
+.card:hover::before, .tile:hover::before, .tool-card:hover::before, .tm-card:hover::before, .lh-card:hover::before, .atmo-card:hover::before, .set-card:hover::before { opacity: 1; }
+.tile, .tool-card, .tm-card, .lh-card, .atmo-card, .set-card { position: relative; }
+
+/* borda com gradiente (brilho na quina superior esquerda) */
+.side-card, .panel-card, .cmd, .dialog {
+  border-color: transparent;
+  background:
+    var(--spec) padding-box,
+    linear-gradient(var(--glass-tint), var(--glass-tint)) padding-box,
+    linear-gradient(150deg, rgba(255, 255, 255, .26), rgba(255, 255, 255, .06) 30%, rgba(var(--glow), .22) 70%, rgba(var(--glow2), .28)) border-box;
+}
+.cmd, .dialog {
+  background:
+    var(--spec) padding-box,
+    linear-gradient(var(--glass-tint-strong), var(--glass-tint-strong)) padding-box,
+    linear-gradient(150deg, rgba(255, 255, 255, .3), rgba(255, 255, 255, .06) 35%, rgba(var(--glow), .35) 75%, rgba(var(--glow2), .4)) border-box;
+}
+
+/* ---------- moldura do conteúdo: vidro grosso ---------- */
+.frame {
+  border-color: transparent;
+  background:
+    linear-gradient(165deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, .025) 35%, rgba(var(--glow2), .05)) padding-box,
+    linear-gradient(var(--glass-tint), var(--glass-tint)) padding-box,
+    linear-gradient(150deg, rgba(255, 255, 255, .32), rgba(var(--glow-soft), .18) 30%, rgba(255, 255, 255, .04) 55%, rgba(var(--glow2), .35)) border-box;
+  backdrop-filter: blur(24px) saturate(170%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .18),
+    0 0 0 1px rgba(0, 0, 0, .3),
+    0 30px 80px -10px rgba(0, 0, 0, .6),
+    0 0 70px -10px rgba(var(--glow), .28);
+}
+.frame::after {
+  content: ""; position: absolute; left: 12%; right: 12%; top: -1px; height: 1px; pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .6), transparent);
+}
+
+/* ---------- barra de endereço ---------- */
+.omni {
+  background:
+    var(--spec) padding-box,
+    linear-gradient(90deg, rgba(var(--glow), .24), rgba(30, 36, 60, .45) 50%, rgba(var(--glow2), .14)) padding-box,
+    linear-gradient(90deg, rgba(255, 255, 255, .35), rgba(var(--glow-soft), .25) 40%, rgba(255, 255, 255, .08) 60%, rgba(var(--glow2), .45)) border-box;
+  backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .18), 0 8px 30px -8px rgba(var(--glow), .45), 0 0 40px -10px rgba(var(--glow2), .25);
+}
+.omni:focus-within {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 0 0 3px rgba(var(--glow), .25), 0 10px 40px -6px rgba(var(--glow), .6);
+}
+
+/* ---------- itens em pílula de vidro ---------- */
+.ws-item.active {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .28), rgba(255, 255, 255, 0) 55%),
+    linear-gradient(95deg, var(--ws), color-mix(in srgb, var(--ws) 45%, #FF9BE6));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), inset 0 0 0 1px rgba(255, 255, 255, .22), 0 8px 30px -6px color-mix(in srgb, var(--ws) 70%, transparent);
+}
+.tab-item.active, .tool.on {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, .03));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), 0 0 0 1px rgba(var(--glow-soft), .35), 0 6px 24px -8px rgba(var(--glow), .55);
+  border-color: transparent;
+}
+.tab-item:hover, .ws-item:hover:not(.active), .tool:hover { background: linear-gradient(180deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .02)); }
+.fav { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12); }
+
+.ib:hover:not(:disabled) { background: linear-gradient(180deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, .03)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1); }
+.ib.on { color: var(--accent); text-shadow: 0 0 10px var(--accent); filter: drop-shadow(0 0 6px rgba(var(--glow2), .6)); }
+.ws-avatar { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5), 0 0 0 2px rgba(255, 255, 255, .12), 0 0 22px color-mix(in srgb, var(--ws, var(--primary)) 60%, transparent); }
+
+.btn {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, .03));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12);
+  backdrop-filter: blur(12px);
+}
+.btn.primary {
+  background: linear-gradient(180deg, rgba(255, 255, 255, .25), rgba(255, 255, 255, 0) 60%), linear-gradient(95deg, var(--primary), var(--primary-soft));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), 0 8px 26px -6px rgba(var(--glow), .7);
+}
+
+/* ---------- cartões das páginas internas ---------- */
+.tile, .tool-card, .tm-card, .lh-card, .set-card, .u-card, .atmo-card, .ntp-search, .tm-track, .ai-ctx {
+  background: var(--spec), rgba(22, 27, 46, .42);
+  backdrop-filter: blur(18px) saturate(160%);
+  border: 1px solid var(--glass-edge);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), 0 14px 40px -18px rgba(0, 0, 0, .7);
+}
+.tile:hover, .tool-card:hover, .tm-card:hover {
+  border-color: rgba(var(--glow-soft), .45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16), 0 18px 50px -16px rgba(var(--glow), .55);
+}
+.ntp-search { background: var(--spec), rgba(16, 20, 34, .55); border-color: var(--glass-edge-hi); }
+
+/* ---------- divisória do Split e overlay ---------- */
+.overlay { background: rgba(4, 5, 10, .35); backdrop-filter: blur(8px) saturate(140%); }
+.overlay.clear { backdrop-filter: none; }
+.split .pane { background: linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .02)); }
+
+/* ---------- página de erro ---------- */
+.err-card { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px;
+  background: radial-gradient(ellipse at 50% 30%, rgba(var(--glow), .16), transparent 60%), #070910; }
+.err-in { max-width: 460px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.err-ic { width: 64px; height: 64px; border-radius: 20px; display: grid; place-items: center; color: #FFB357; margin-bottom: 6px;
+  background: var(--spec), rgba(255, 179, 87, .1); border: 1px solid rgba(255, 179, 87, .3); box-shadow: 0 0 40px -6px rgba(255, 179, 87, .4); }
+.err-ic .ic { width: 30px; height: 30px; }
+.err-in h2 { margin: 0; font-size: 20px; font-weight: 600; }
+.err-in p { margin: 0; color: var(--muted); }
+.err-in code { font: 12px var(--mono); color: var(--dim); padding: 4px 10px; border-radius: 8px; background: rgba(255, 255, 255, .04); border: 1px solid var(--line); }
+.err-in .acts { display: flex; gap: 8px; margin-top: 10px; }
+
+/* ---------- janela do Electron ---------- */
+body.electron .winctl button { -webkit-app-region: no-drag; }
+@media (prefers-reduced-transparency: reduce) {
+  .card, .cmd, .dialog, .menu, .suggest { backdrop-filter: none; background: var(--glass-strong); }
+}

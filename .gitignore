@@ -1,0 +1,12 @@
+node_modules/
+dist-electron/
+release/
+*.log
+*.tmp
+.test/
+
+# binários da versão antiga (WebView2) — o código-fonte fica, os pacotes não
+legacy/webview2/pkg/
+legacy/webview2/*.dll
+
+.upload/

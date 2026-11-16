@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <title>TSF Browser</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: https: http: tsf-thumb:; style-src 'self' 'unsafe-inline'; script-src 'self'">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="features.css">
+  <link rel="stylesheet" href="glass.css">
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <linearGradient id="tsfGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" style="stop-color:var(--primary-soft)"/>
+        <stop offset="0.55" style="stop-color:var(--primary)"/>
+        <stop offset="1" style="stop-color:var(--accent)"/>
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <div class="ambient" aria-hidden="true"><i class="b1"></i><i class="b2"></i><i class="b3"></i><i class="b4"></i></div>
+  <canvas id="atmoFx" class="atmo-fx" aria-hidden="true"></canvas>
+
+  <div id="app" class="app">
+    <header class="topbar drag">
+      <div class="brand">
+        <span class="logo" id="brandLogo"></span>
+        <span class="wordmark">TSF<small>browser</small></span>
+      </div>
+
+      <div class="nav-btns">
+        <button class="ib" id="btnBack" data-cmd="back" title="Voltar (Alt+←)"></button>
+        <button class="ib" id="btnFwd" data-cmd="forward" title="Avançar (Alt+→)"></button>
+        <button class="ib" id="btnReload" data-cmd="reload" title="Recarregar (F5)"></button>
+        <button class="ib" id="btnHome" data-cmd="home" title="Início (Alt+Home)"></button>
+      </div>
+
+      <div class="omni-wrap no-drag">
+        <form id="omni" class="omni" autocomplete="off">
+          <span class="omni-ic" id="omniIcon"></span>
+          <input id="omniInput" spellcheck="false" placeholder="Pesquise, pergunte à IA ou cole uma URL">
+          <kbd class="omni-kbd">Ctrl K</kbd>
+        </form>
+        <div id="suggest" class="suggest" hidden></div>
+      </div>
+
+      <div class="actions">
+        <button class="ib" id="btnStar" data-cmd="toggleFav" title="Favoritar (Ctrl+D)"></button>
+        <button class="ib" id="btnSplit" data-cmd="splitView" title="Split View (Ctrl+Shift+D)"></button>
+        <button class="ib" id="btnInspector" data-cmd="inspector" title="TSF Inspector (Ctrl+Shift+E)"></button>
+        <button class="ib" id="btnDev" data-cmd="devtools" title="DevTools (F12)"></button>
+        <button class="ib" id="btnAtmo" data-cmd="atmosphere" title="TSF Atmosphere (Ctrl+Shift+M)"></button>
+        <button class="ib" id="btnPanel" data-cmd="togglePanel" title="Painel TSF AI (Ctrl+Shift+A)"></button>
+        <button class="ws-avatar" id="wsAvatar" data-cmd="wsMenu" title="Trocar workspace"></button>
+        <button class="ib" id="btnMenu" data-cmd="menu" title="Menu"></button>
+      </div>
+
+      <div class="winctl">
+        <button id="wMin" data-win="min" title="Minimizar"></button>
+        <button id="wMax" data-win="max" title="Maximizar"></button>
+        <button id="wClose" data-win="close" class="close" title="Fechar"></button>
+      </div>
+    </header>
+
+    <aside class="sidebar">
+      <div class="card side-card">
+        <div class="side-head">
+          <span>Workspaces</span>
+          <button class="mini" data-cmd="newWorkspace" title="Novo workspace"></button>
+        </div>
+        <nav id="wsList" class="ws-list"></nav>
+        <div class="tools" id="tools"></div>
+        <div class="sep"></div>
+        <div class="side-head">
+          <span>Abas</span>
+          <button class="mini" data-cmd="newTab" title="Nova aba (Ctrl+T)"></button>
+        </div>
+        <div id="tabList" class="tab-list"></div>
+        <footer class="side-foot">
+          <button class="ib" data-cmd="settings" title="Configurações (Ctrl+,)" id="btnSettings"></button>
+          <button class="ib" data-cmd="downloads" title="Downloads (Ctrl+J)" id="btnDownloads"></button>
+          <button class="ib" data-cmd="history" title="Histórico (Ctrl+H)" id="btnHistory"></button>
+          <span class="grow"></span>
+          <button class="ib" data-cmd="toggleSidebar" title="Recolher sidebar (Ctrl+B)" id="btnCollapse"></button>
+        </footer>
+      </div>
+    </aside>
+
+    <main class="stage">
+      <div class="frame" id="frame">
+        <div class="progress" id="progress"></div>
+        <div class="viewport" id="viewport">
+          <div id="stageWeb" class="stage-web"></div>
+          <div id="internal" class="internal" hidden></div>
+        </div>
+        <section class="inspector" id="inspector" hidden></section>
+      </div>
+    </main>
+
+    <aside class="panel" id="panel">
+      <div class="card panel-card">
+        <header class="panel-head">
+          <div class="seg" role="tablist">
+            <button data-ptab="ai" id="ptabAi"></button>
+            <button data-ptab="notes" id="ptabNotes"></button>
+          </div>
+          <button class="ib sm" data-cmd="togglePanel" title="Fechar painel" id="btnPanelClose"></button>
+        </header>
+
+        <section class="ptab" data-pane="ai">
+          <div class="ai-wave"><canvas id="wave"></canvas></div>
+          <div class="ai-ctx" id="aiCtx"></div>
+          <div class="ai-foot">
+            <p class="ai-note">O assistente contextual chega na Fase 05. Por enquanto este painel mostra o contexto da página.</p>
+            <div class="chips">
+              <button disabled>Resumir esta página</button>
+              <button disabled>Explicar código selecionado</button>
+            </div>
+            <div class="ai-input">
+              <input disabled placeholder="Em breve: pergunte sobre esta página…">
+              <button disabled id="aiSend"></button>
+            </div>
+          </div>
+        </section>
+
+        <section class="ptab" data-pane="notes" hidden>
+          <div class="notes-head" id="notesHead"></div>
+          <textarea id="notesText" spellcheck="false" placeholder="Anotações vinculadas a este site…"></textarea>
+          <div class="notes-foot" id="notesFoot">Salvo automaticamente</div>
+        </section>
+      </div>
+    </aside>
+
+    <footer class="status">
+      <div class="link-hint" id="linkHint"></div>
+      <div class="pill" id="statusPill"></div>
+      <button class="update-chip" id="updateChip" data-cmd="installUpdate" hidden></button>
+      <button class="atmo-chip" id="atmoChip" data-cmd="atmosphere"></button>
+    </footer>
+  </div>
+
+  <div id="overlay" class="overlay" hidden></div>
+
+  <script src="js/core.js"></script>
+  <script src="js/pages.js"></script>
+  <script src="js/universe.js"></script>
+  <script src="js/lab.js"></script>
+  <script src="js/inspector.js"></script>
+  <script src="js/atmosphere.js"></script>
+  <script src="js/boot.js"></script>
+</body>
+</html>

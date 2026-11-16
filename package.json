@@ -1,0 +1,65 @@
+{
+  "name": "tsf-browser",
+  "productName": "TSF Browser",
+  "version": "0.4.0",
+  "repository": "https://github.com/RafaelForti1/tsfbrowser",
+  "description": "TSF Browser — navegador para desenvolvedores (Electron + Chromium)",
+  "main": "dist-electron/main.js",
+  "private": true,
+  "scripts": {
+    "build:main": "tsc -p tsconfig.json",
+    "start": "npm run build:main && node scripts/start.js",
+    "dev": "npm run build:main && node scripts/start.js --debug",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "dist": "npm run build:main && electron-builder --win --x64 --publish never",
+    "release": "npm run build:main && electron-builder --win --x64 --publish always"
+  },
+  "build": {
+    "appId": "tsf.browser",
+    "productName": "TSF Browser",
+    "publish": [
+      { "provider": "github", "owner": "RafaelForti1", "repo": "tsfbrowser", "releaseType": "release" }
+    ],
+    "directories": {
+      "output": "release",
+      "buildResources": "assets"
+    },
+    "files": [
+      "dist-electron/**/*",
+      "shell/**/*",
+      "assets/tsf.ico",
+      "package.json"
+    ],
+    "win": {
+      "icon": "assets/tsf.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "TSFBrowser-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowElevation": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "TSF Browser",
+      "deleteAppDataOnUninstall": false
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "electron": "^45.3.3",
+    "electron-builder": "^26.18.0",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.11"
+  }
+}
